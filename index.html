@@ -58,12 +58,41 @@
       text-align: center;
     }
 
+    .logo-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .logo-mark {
+      width: 0.6rem;
+      height: 0.6rem;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
     .logo {
       display: inline-block;
-      font-size: 1.1rem;
+      font-size: 1.4rem;
       font-weight: 700;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .logo strong {
+      font-weight: 800;
       color: var(--accent);
+    }
+
+    .tagline {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
       margin-bottom: 1.5rem;
     }
 
@@ -156,6 +185,26 @@
       background: #fff0f0;
     }
 
+    .more-row {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .more-text {
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    .more-link {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .more-link:hover {
+      text-decoration: underline;
+    }
+
     .share-row {
       display: flex;
       align-items: center;
@@ -199,6 +248,12 @@
       line-height: 1.5;
     }
 
+    footer p.memorable {
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .btn, .btn-arrow, .share-btn { transition: none; }
     }
@@ -228,7 +283,11 @@
   <main class="wrap" role="main">
 
     <header class="header">
-      <span class="logo">The Local Social</span>
+      <span class="logo-row">
+        <span class="logo-mark" aria-hidden="true"></span>
+        <span class="logo">The Local <strong>Social</strong></span>
+      </span>
+      <span class="tagline">Weymouth &amp; Portland · No login, no data</span>
       <h1 class="hook">What's going on?</h1>
       <p class="subhook">Choose what fits — we'll take you to the right place.</p>
     </header>
@@ -277,22 +336,26 @@
 
     </nav>
 
+    <div class="more-row">
+      <span class="more-text">Something else going on? <a href="https://weymouthandportlandpcn.co.uk" class="more-link" onclick="plausible('Button Click', {props: {button: 'PCN website fallback'}})">Visit the full PCN website</a></span>
+    </div>
+
     <div class="share-row">
-      <span class="share-text">Know someone who needs this?</span>
+      <span class="share-text">Tell someone: "Check out The Local Social"</span>
       <button class="share-btn" id="copyBtn" onclick="copyLink()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Copy link
+        Copy
       </button>
     </div>
 
     <script>
       function copyLink() {
-        navigator.clipboard.writeText('https://thelocalsocial.org').then(function() {
+        navigator.clipboard.writeText('Check out The Local Social — thelocalsocial.org').then(function() {
           var btn = document.getElementById('copyBtn');
           btn.textContent = 'Copied!';
           plausible('Share', {props: {method: 'Copy link'}});
           setTimeout(function() {
-            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy link';
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy';
           }, 2000);
         });
       }
@@ -301,6 +364,7 @@
   </main>
 
   <footer>
+    <p class="memorable">thelocalsocial.org — easy to remember, easy to say.</p>
     <p>No personal data is collected.</p>
     <p>Powered by Weymouth and Portland Primary Care Network</p>
   </footer>
