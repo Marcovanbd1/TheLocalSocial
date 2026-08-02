@@ -6,6 +6,11 @@
   <meta name="description" content="Whatever you've got going on, find local help and support in Weymouth and Portland.">
   <title>The Local Social</title>
 
+  <!-- Display font matching the tote bag / poster branding -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+
   <!-- Privacy-friendly analytics by Plausible -->
   <script async src="https://plausible.io/js/pa-p2IzE-Yw_nCY7qWTgwhnB.js"></script>
   <script>
@@ -26,6 +31,15 @@
       --accent-light: #e8f1fa;
       --radius: 14px;
       --max: 480px;
+      /* Gradient lifted from the tote bag / poster branding */
+      --gradient: linear-gradient(90deg, #3b5bdb 0%, #9c36b5 40%, #e64980 70%, #ff922b 100%);
+    }
+
+    .gradient-text {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
 
     html, body {
@@ -63,45 +77,41 @@
     .logo-row {
       display: inline-flex;
       align-items: center;
-      gap: 0.45rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .logo-mark {
-      width: 0.6rem;
-      height: 0.6rem;
-      border-radius: 50%;
-      background: var(--accent);
-      flex-shrink: 0;
+      margin-bottom: 0.75rem;
     }
 
     .logo {
       display: inline-block;
-      font-size: 1.4rem;
+      font-family: 'Baloo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-size: 2.1rem;
       font-weight: 700;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
       color: var(--text);
     }
 
     .logo strong {
-      font-weight: 800;
-      color: var(--accent);
+      font-weight: 700;
     }
 
     .tagline {
       display: block;
       font-size: 0.7rem;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 1.5rem;
+      line-height: 1.9;
+    }
+
+    .tagline.no-data {
+      margin-bottom: 1.75rem;
     }
 
     .hook {
-      font-size: clamp(2rem, 8vw, 2.75rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
+      font-family: 'Baloo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-size: clamp(2.1rem, 9vw, 3rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
       line-height: 1.05;
       color: var(--text);
       margin-bottom: 0.6rem;
@@ -308,11 +318,11 @@
 
     <header class="header">
       <span class="logo-row">
-        <span class="logo-mark" aria-hidden="true"></span>
-        <span class="logo">The Local <strong>Social</strong></span>
+        <span class="logo">The Local <strong class="gradient-text">Social</strong></span>
       </span>
-      <span class="tagline">Weymouth &amp; Portland · No login, no data</span>
-      <h1 class="hook">What's going on?</h1>
+      <span class="tagline">Weymouth &amp; Portland</span>
+      <span class="tagline no-data">No login &nbsp;&bull;&nbsp; No data</span>
+      <h1 class="hook">What's going <span class="gradient-text">on?</span></h1>
       <p class="subhook">Choose what fits. We'll take you to the right place.</p>
     </header>
 
