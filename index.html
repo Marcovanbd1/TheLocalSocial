@@ -40,9 +40,10 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       min-height: 100vh;
       padding: 2rem 1.25rem;
+      /* leave room for the sticky share bar so nothing hides behind it */
+      padding-bottom: 6.5rem;
     }
 
     .wrap {
@@ -51,6 +52,7 @@
       display: flex;
       flex-direction: column;
       gap: 0;
+      margin: auto 0;
     }
 
     .header {
@@ -205,38 +207,6 @@
       text-decoration: underline;
     }
 
-    .share-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-top: 1.75rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .share-text {
-      font-size: 0.875rem;
-      color: var(--muted);
-    }
-
-    .share-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.45rem 0.9rem;
-      background: var(--text);
-      color: var(--bg);
-      border-radius: 999px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-
-    .share-btn:hover { opacity: 0.75; }
-
     footer {
       margin-top: 2rem;
       text-align: center;
@@ -253,6 +223,56 @@
       font-weight: 600;
       margin-bottom: 0.35rem;
     }
+
+    /* Sticky share bar */
+    .share-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: center;
+      padding: 0.85rem 1.25rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+      background: linear-gradient(180deg, rgba(247,246,242,0) 0%, var(--bg) 35%, var(--bg) 100%);
+      pointer-events: none;
+    }
+
+    .share-btn {
+      pointer-events: auto;
+      width: 100%;
+      max-width: var(--max);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 1rem 1.25rem;
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      border-radius: 999px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(29, 111, 184, 0.35);
+      transition: transform 0.1s, box-shadow 0.15s, background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .share-btn:hover {
+      box-shadow: 0 8px 24px rgba(29, 111, 184, 0.45);
+    }
+
+    .share-btn:active {
+      transform: scale(0.98);
+    }
+
+    .share-btn:focus-visible {
+      outline: 3px solid var(--text);
+      outline-offset: 2px;
+    }
+
+    .share-btn svg { flex-shrink: 0; }
 
     @media (prefers-reduced-motion: reduce) {
       .btn, .btn-arrow, .share-btn { transition: none; }
@@ -275,6 +295,10 @@
       .btn.crisis:hover {
         border-color: #e53e3e;
         background: #2a1515;
+      }
+      .share-btn { color: #0b0b0b; }
+      .share-bar {
+        background: linear-gradient(180deg, rgba(17,17,17,0) 0%, var(--bg) 35%, var(--bg) 100%);
       }
     }
   </style>
@@ -340,34 +364,52 @@
       <span class="more-text">Something else going on? <a href="https://weymouthandportlandpcn.co.uk" class="more-link" onclick="plausible('Button Click', {props: {button: 'PCN website fallback'}})">Visit the full PCN website</a></span>
     </div>
 
-    <div class="share-row">
-      <span class="share-text">Tell someone: "Check out The Local Social"</span>
-      <button class="share-btn" id="copyBtn" onclick="copyLink()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Copy
-      </button>
-    </div>
-
-    <script>
-      function copyLink() {
-        navigator.clipboard.writeText('Check out The Local Social at thelocalsocial.org').then(function() {
-          var btn = document.getElementById('copyBtn');
-          btn.textContent = 'Copied!';
-          plausible('Share', {props: {method: 'Copy link'}});
-          setTimeout(function() {
-            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy';
-          }, 2000);
-        });
-      }
-    </script>
+    <footer>
+      <p class="memorable">thelocalsocial.org is easy to remember and easy to say.</p>
+      <p>No personal data is collected.</p>
+      <p>Powered by Weymouth and Portland Primary Care Network</p>
+    </footer>
 
   </main>
 
-  <footer>
-    <p class="memorable">thelocalsocial.org is easy to remember and easy to say.</p>
-    <p>No personal data is collected.</p>
-    <p>Powered by Weymouth and Portland Primary Care Network</p>
-  </footer>
+  <div class="share-bar">
+    <button class="share-btn" id="shareBtn" onclick="shareSite()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg>
+      <span id="shareBtnLabel">Share with a friend</span>
+    </button>
+  </div>
+
+  <script>
+    function shareSite() {
+      var url = 'https://thelocalsocial.org';
+      var shareData = {
+        title: 'The Local Social',
+        text: 'Whatever you\'ve got going on, The Local Social can help you find support in Weymouth and Portland. No login, no data.',
+        url: url
+      };
+
+      if (navigator.share) {
+        navigator.share(shareData)
+          .then(function() {
+            plausible('Share', {props: {method: 'Native share'}});
+          })
+          .catch(function() {
+            // user cancelled the share sheet — no action needed
+          });
+      } else {
+        // Fallback for browsers without native share support (mostly desktop)
+        navigator.clipboard.writeText('Check out The Local Social at ' + url).then(function() {
+          var label = document.getElementById('shareBtnLabel');
+          var original = label.textContent;
+          label.textContent = 'Link copied!';
+          plausible('Share', {props: {method: 'Copy link fallback'}});
+          setTimeout(function() {
+            label.textContent = original;
+          }, 2000);
+        });
+      }
+    }
+  </script>
 
 </body>
 </html>
