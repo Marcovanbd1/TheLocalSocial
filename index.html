@@ -390,8 +390,30 @@
   </div>
 
   <script>
+    // --- Share COMPLETION tracking -------------------------------------
+    // The share button below already logs a "Share" event the moment
+    // someone taps it (share *intent*). That only tells us the button
+    // gets used. To learn whether the share actually landed with anyone,
+    // the URL that goes out via share/copy carries a tag (?src=share),
+    // and this block below fires a separate "Share Landing" event when a
+    // page load arrives with that tag. No identifiers are read or stored
+    // anywhere — just an aggregate count Plausible can show, same as any
+    // other goal on the dashboard.
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('src') === 'share') {
+        plausible('Share Landing');
+        // tidy the URL bar so the tag doesn't linger if someone
+        // bookmarks or re-shares straight from here
+        var cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    })();
+
     function shareSite() {
-      var url = 'https://thelocalsocial.org';
+      // Tagged so arrivals via this specific link can be told apart
+      // from direct visits, search, or a QR code at a stand.
+      var url = 'https://thelocalsocial.org/?src=share';
       var shareData = {
         title: 'The Local Social',
         text: 'Whatever you\'ve got going on, The Local Social can help you find support in Weymouth and Portland. No login, no data.',
