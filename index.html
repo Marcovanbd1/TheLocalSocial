@@ -6,6 +6,15 @@
   <meta name="description" content="Whatever you've got going on, find local help and support in Weymouth and Portland.">
   <title>The Local Social</title>
 
+  <!-- Home screen icon + manifest -->
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1d6fb8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Local Social">
+
   <!-- Display font matching the tote bag / poster branding -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -311,6 +320,147 @@
         background: linear-gradient(180deg, rgba(17,17,17,0) 0%, var(--bg) 35%, var(--bg) 100%);
       }
     }
+
+    /* ------------------------------------------------------------------ */
+    /* Add-to-Home-Screen nudge                                           */
+    /* ------------------------------------------------------------------ */
+    .a2hs-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 0;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .a2hs-overlay.visible {
+      display: flex;
+      opacity: 1;
+    }
+
+    .a2hs-card {
+      width: 100%;
+      max-width: var(--max);
+      background: var(--surface);
+      border-radius: 22px 22px 0 0;
+      padding: 1.5rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.18);
+    }
+
+    .a2hs-overlay.visible .a2hs-card {
+      transform: translateY(0);
+    }
+
+    .a2hs-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 999px;
+      margin: 0 auto 1.1rem;
+    }
+
+    .a2hs-title {
+      font-family: 'Baloo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 0.4rem;
+    }
+
+    .a2hs-sub {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-bottom: 1.2rem;
+    }
+
+    .a2hs-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      margin-bottom: 1.3rem;
+    }
+
+    .a2hs-step {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      background: var(--accent-light);
+      border-radius: 12px;
+      padding: 0.7rem 0.9rem;
+    }
+
+    .a2hs-step-num {
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .a2hs-step-icon {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+
+    .a2hs-step-text {
+      font-size: 0.92rem;
+      line-height: 1.35;
+    }
+
+    .a2hs-step-text strong {
+      font-weight: 700;
+    }
+
+    .a2hs-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    .a2hs-primary {
+      width: 100%;
+      padding: 0.95rem 1.1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .a2hs-dismiss {
+      width: 100%;
+      padding: 0.85rem 1.1rem;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .a2hs-primary { color: #0b0b0b; }
+    }
   </style>
 </head>
 <body>
@@ -389,6 +539,14 @@
     </button>
   </div>
 
+  <!-- Add-to-Home-Screen nudge, shown after a QR scan on mobile -->
+  <div class="a2hs-overlay" id="a2hsOverlay" role="dialog" aria-modal="true" aria-labelledby="a2hsTitle">
+    <div class="a2hs-card">
+      <div class="a2hs-handle" aria-hidden="true"></div>
+      <div id="a2hsBody"><!-- filled by JS depending on platform --></div>
+    </div>
+  </div>
+
   <script>
     // --- Share COMPLETION tracking -------------------------------------
     // The share button below already logs a "Share" event the moment
@@ -401,8 +559,11 @@
     // other goal on the dashboard.
     (function () {
       var params = new URLSearchParams(window.location.search);
-      if (params.get('src') === 'share') {
+      var src = params.get('src');
+      if (src === 'share') {
         plausible('Share Landing');
+      }
+      if (src) {
         // tidy the URL bar so the tag doesn't linger if someone
         // bookmarks or re-shares straight from here
         var cleanUrl = window.location.origin + window.location.pathname;
@@ -441,6 +602,150 @@
         });
       }
     }
+
+    // --- Add to Home Screen nudge --------------------------------------
+    // Goal: someone scans the freshers-fair QR code (tagged ?src=freshers),
+    // lands here, and gets a short platform-specific nudge to add the page
+    // to their home screen — turning a one-off visit into an icon they
+    // keep. Deferred install prompt is used on Android where the browser
+    // supports it; iOS Safari has no such API, so we show manual steps.
+    (function () {
+      var STORAGE_KEY = 'tls_a2hs_dismissed';
+      var overlay = document.getElementById('a2hsOverlay');
+      var body = document.getElementById('a2hsBody');
+      var deferredInstallPrompt = null;
+
+      function isStandalone() {
+        return window.matchMedia('(display-mode: standalone)').matches ||
+               window.navigator.standalone === true; // iOS Safari flag
+      }
+
+      function alreadyDismissed() {
+        try {
+          return localStorage.getItem(STORAGE_KEY) === '1';
+        } catch (e) {
+          return false; // if storage is blocked, just show it — no harm done
+        }
+      }
+
+      function setDismissed() {
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) { /* ignore */ }
+      }
+
+      function getPlatform() {
+        var ua = window.navigator.userAgent || '';
+        var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+        var isAndroid = /Android/.test(ua);
+        return isIOS ? 'ios' : (isAndroid ? 'android' : 'other');
+      }
+
+      // Capture Android/Chrome's native install prompt if it fires.
+      // This only fires when the page meets PWA installability criteria
+      // (manifest + https + service worker) — safe to listen for either way.
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+      });
+
+      function shareIconSVG() {
+        return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>';
+      }
+
+      function dotsIconSVG() {
+        return '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+      }
+
+      function plusIconSVG() {
+        return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+      }
+
+      function renderIOS() {
+        body.innerHTML =
+          '<h2 class="a2hs-title" id="a2hsTitle">Keep it on your phone</h2>' +
+          '<p class="a2hs-sub">Add The Local Social to your home screen so it\'s one tap away, next time you need it.</p>' +
+          '<div class="a2hs-steps">' +
+            '<div class="a2hs-step"><span class="a2hs-step-num">1</span><span class="a2hs-step-icon">' + shareIconSVG() + '</span><span class="a2hs-step-text">Tap the <strong>Share</strong> icon at the bottom of Safari</span></div>' +
+            '<div class="a2hs-step"><span class="a2hs-step-num">2</span><span class="a2hs-step-icon">' + plusIconSVG() + '</span><span class="a2hs-step-text">Scroll down and tap <strong>Add to Home Screen</strong></span></div>' +
+          '</div>' +
+          '<div class="a2hs-actions">' +
+            '<button class="a2hs-dismiss" id="a2hsDismiss">Maybe later</button>' +
+          '</div>';
+      }
+
+      function renderAndroid() {
+        var primaryButton = deferredInstallPrompt
+          ? '<button class="a2hs-primary" id="a2hsInstall">Add to home screen</button>'
+          : '';
+        body.innerHTML =
+          '<h2 class="a2hs-title" id="a2hsTitle">Keep it on your phone</h2>' +
+          '<p class="a2hs-sub">Add The Local Social to your home screen so it\'s one tap away, next time you need it.</p>' +
+          (deferredInstallPrompt ? '' :
+          '<div class="a2hs-steps">' +
+            '<div class="a2hs-step"><span class="a2hs-step-num">1</span><span class="a2hs-step-icon">' + dotsIconSVG() + '</span><span class="a2hs-step-text">Tap the <strong>&#8942;</strong> menu in Chrome</span></div>' +
+            '<div class="a2hs-step"><span class="a2hs-step-num">2</span><span class="a2hs-step-icon">' + plusIconSVG() + '</span><span class="a2hs-step-text">Tap <strong>Add to Home screen</strong></span></div>' +
+          '</div>') +
+          '<div class="a2hs-actions">' +
+            primaryButton +
+            '<button class="a2hs-dismiss" id="a2hsDismiss">Maybe later</button>' +
+          '</div>';
+
+        if (deferredInstallPrompt) {
+          document.getElementById('a2hsInstall').addEventListener('click', function () {
+            deferredInstallPrompt.prompt();
+            deferredInstallPrompt.userChoice.then(function (choice) {
+              plausible('A2HS Prompt', {props: {outcome: choice.outcome}});
+              deferredInstallPrompt = null;
+              hideNudge();
+            });
+          });
+        }
+      }
+
+      function hideNudge() {
+        overlay.classList.remove('visible');
+        setDismissed();
+      }
+
+      function showNudge(platform) {
+        if (platform === 'ios') {
+          renderIOS();
+        } else {
+          renderAndroid();
+        }
+        overlay.classList.add('visible');
+        document.getElementById('a2hsDismiss').addEventListener('click', function () {
+          plausible('A2HS Nudge Dismissed');
+          hideNudge();
+        });
+        plausible('A2HS Nudge Shown', {props: {platform: platform}});
+      }
+
+      function init() {
+        if (isStandalone() || alreadyDismissed()) return;
+
+        var platform = getPlatform();
+        if (platform === 'other') return; // desktop visitors don't need this
+
+        var params = new URLSearchParams(window.location.search);
+        var cameFromQR = params.get('src') === 'freshers';
+
+        if (cameFromQR) {
+          // Straight from the stand's QR code — show immediately.
+          showNudge(platform);
+        } else {
+          // Any other mobile visit — still worth offering, but give the
+          // beforeinstallprompt event (Android) a moment to fire first,
+          // and don't interrupt the very first paint of the page.
+          setTimeout(function () { showNudge(platform); }, 3500);
+        }
+      }
+
+      if (document.readyState === 'complete') {
+        init();
+      } else {
+        window.addEventListener('load', init);
+      }
+    })();
   </script>
 
 </body>
