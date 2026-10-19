@@ -233,14 +233,28 @@
 
     footer p {
       font-size: 0.775rem;
-      color: #aaa;
+      color: var(--muted);
       line-height: 1.5;
     }
 
-    footer p.memorable {
-      color: var(--muted);
+    .crisis-note {
+      text-align: center;
+      font-size: 0.9rem;
       font-weight: 600;
-      margin-bottom: 0.35rem;
+      color: #b42318;
+      margin-top: -0.1rem;
+    }
+
+    .crisis-note a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .crisis-note a:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
     }
 
     /* Sticky share bar */
@@ -315,6 +329,7 @@
         border-color: #e53e3e;
         background: #2a1515;
       }
+      .crisis-note { color: #f87171; }
       .share-btn { color: #0b0b0b; }
       .share-bar {
         background: linear-gradient(180deg, rgba(17,17,17,0) 0%, var(--bg) 35%, var(--bg) 100%);
@@ -481,7 +496,7 @@
       <a href="https://weymouthandportlandpcn.co.uk/mentalhealthandwellbeing?from=tls"
          class="btn"
          onclick="plausible('Button Click', {props: {button: 'Mental wellbeing'}})">
-        <span class="btn-icon" aria-hidden="true">🧠</span>
+        <span class="btn-icon" aria-hidden="true">💬</span>
         <span class="btn-text">I'm feeling low or stressed</span>
         <span class="btn-arrow" aria-hidden="true">→</span>
       </a>
@@ -518,15 +533,15 @@
         <span class="btn-arrow" aria-hidden="true">→</span>
       </a>
 
+      <p class="crisis-note">In danger right now? <a href="tel:999" onclick="plausible('Button Click', {props: {button: 'Call 999'}})">Call 999</a></p>
+
     </nav>
 
     <div class="more-row">
-      <span class="more-text">Something else going on? <a href="https://weymouthandportlandpcn.co.uk?from=tls" class="more-link" onclick="plausible('Button Click', {props: {button: 'PCN website fallback'}})">Visit the full PCN website</a></span>
+      <span class="more-text">Something else going on? <a href="https://weymouthandportlandpcn.co.uk?from=tls" class="more-link" onclick="plausible('Button Click', {props: {button: 'PCN website fallback'}})">Start here</a></span>
     </div>
 
     <footer>
-      <p class="memorable">thelocalsocial.org is easy to remember and easy to say.</p>
-      <p>No personal data is collected.</p>
       <p>Powered by Weymouth and Portland Primary Care Network</p>
     </footer>
 
@@ -557,11 +572,21 @@
     // page load arrives with that tag. No identifiers are read or stored
     // anywhere — just an aggregate count Plausible can show, same as any
     // other goal on the dashboard.
+    // Read the arrival tag ONCE, before anything tidies the URL, and keep
+    // it so the home screen nudge below can still see it. All printed QR
+    // codes (posters, tote bags) carry ?src=freshers, so that value means
+    // "arrived by QR scan", not just the freshers fair.
+    var ARRIVAL_SRC = new URLSearchParams(window.location.search).get('src');
+    var CAME_FROM_QR = ARRIVAL_SRC === 'freshers';
+
     (function () {
-      var params = new URLSearchParams(window.location.search);
-      var src = params.get('src');
+      var src = ARRIVAL_SRC;
       if (src === 'share') {
         plausible('Share Landing');
+      }
+      if (CAME_FROM_QR) {
+        // Clean count of QR scans, independent of how the pageview is logged
+        plausible('QR Scan');
       }
       if (src) {
         // tidy the URL bar so the tag doesn't linger if someone
@@ -591,14 +616,21 @@
           });
       } else {
         // Fallback for browsers without native share support (mostly desktop)
+        var label = document.getElementById('shareBtnLabel');
+        var original = label.textContent;
+        function flash(text) {
+          label.textContent = text;
+          setTimeout(function() { label.textContent = original; }, 2500);
+        }
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          flash('Copy failed. The link is thelocalsocial.org');
+          return;
+        }
         navigator.clipboard.writeText('Check out The Local Social at ' + url).then(function() {
-          var label = document.getElementById('shareBtnLabel');
-          var original = label.textContent;
-          label.textContent = 'Link copied!';
+          flash('Link copied!');
           plausible('Share', {props: {method: 'Copy link fallback'}});
-          setTimeout(function() {
-            label.textContent = original;
-          }, 2000);
+        }).catch(function() {
+          flash('Copy failed. The link is thelocalsocial.org');
         });
       }
     }
@@ -703,8 +735,24 @@
 
       function hideNudge() {
         overlay.classList.remove('visible');
+        document.removeEventListener('keydown', onKey);
         setDismissed();
       }
+
+      function onKey(e) {
+        if (e.key === 'Escape') {
+          plausible('A2HS Nudge Dismissed');
+          hideNudge();
+        }
+      }
+
+      // Tapping the dimmed area outside the card also closes it
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) {
+          plausible('A2HS Nudge Dismissed');
+          hideNudge();
+        }
+      });
 
       function showNudge(platform) {
         if (platform === 'ios') {
@@ -713,6 +761,7 @@
           renderAndroid();
         }
         overlay.classList.add('visible');
+        document.addEventListener('keydown', onKey);
         document.getElementById('a2hsDismiss').addEventListener('click', function () {
           plausible('A2HS Nudge Dismissed');
           hideNudge();
@@ -726,18 +775,14 @@
         var platform = getPlatform();
         if (platform === 'other') return; // desktop visitors don't need this
 
-        var params = new URLSearchParams(window.location.search);
-        var cameFromQR = params.get('src') === 'freshers';
+        // Only offer this to people who scanned a printed QR code. Anyone
+        // else (including someone arriving in a hurry from a shared link)
+        // gets straight to the five buttons with nothing covering them.
+        // Uses the tag saved at the top, since the URL has been tidied.
+        if (!CAME_FROM_QR) return;
 
-        if (cameFromQR) {
-          // Straight from the stand's QR code — show immediately.
-          showNudge(platform);
-        } else {
-          // Any other mobile visit — still worth offering, but give the
-          // beforeinstallprompt event (Android) a moment to fire first,
-          // and don't interrupt the very first paint of the page.
-          setTimeout(function () { showNudge(platform); }, 3500);
-        }
+        // Short pause so Android's install prompt has a chance to fire
+        setTimeout(function () { showNudge(platform); }, 600);
       }
 
       if (document.readyState === 'complete') {
